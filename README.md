@@ -42,7 +42,7 @@ z/OS *(provided setgroups() -> BPX1SGR/BPX4SGR is available)*
 
 ## Compiling
 
-Requires the [(cppdsaext)](https://github.com/raltnoeder/cppdsaext) library.
+Requires the [cppdsaext](https://github.com/raltnoeder/cppdsaext) library.
 
 ```
 cd cppdsaext/src
