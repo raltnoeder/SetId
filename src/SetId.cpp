@@ -17,6 +17,8 @@ extern "C"
 #include <GroupIdList.h>
 #include <exceptions.h>
 
+extern char** environ;
+
 // @throws SyntaxException
 static int64_t to_numeric(const char* param, const std::string& text)
 {
