@@ -20,9 +20,9 @@ class GroupIdList
 
     // No copy construction or assignment
     GroupIdList(const GroupIdList& other) = delete;
-    GroupIdList(GroupIdList&& orig) = delete;
+    virtual GroupIdList& operator=(const GroupIdList& other) = delete;
 
-    virtual GroupIdList& operator=(const GroupIdList& other) = default;
+    GroupIdList(GroupIdList&& orig) = default;
     virtual GroupIdList& operator=(GroupIdList&& other) = default;
 
     virtual ~GroupIdList() noexcept;
