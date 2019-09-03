@@ -108,10 +108,10 @@ int main(int argc, char* argv[])
         bool have_groups = false;
         bool have_command = false;
 
-        uid_t req_userid;
-        gid_t req_groupid;
+        uid_t req_userid = 0;
+        gid_t req_groupid = 0;
         std::unique_ptr<gid_t[]> sup_groups;
-        size_t sup_groups_size;
+        size_t sup_groups_size = 0;
 
         size_t cmd_arg_idx = 1;
         for (size_t arg_idx = 1; arg_idx < static_cast<size_t> (argc); ++arg_idx)
