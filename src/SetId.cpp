@@ -106,6 +106,7 @@ int main(int argc, char* argv[])
         bool have_userid = false;
         bool have_groupid = false;
         bool have_groups = false;
+        bool have_command = false;
 
         uid_t req_userid;
         gid_t req_groupid;
@@ -219,6 +220,7 @@ int main(int argc, char* argv[])
                     error_msg("Error: Unexpected value for parameter \"command\"");
                     throw SyntaxException();
                 }
+                have_command = true;
                 cmd_arg_idx = arg_idx + 1;
                 break;
             }
@@ -230,7 +232,7 @@ int main(int argc, char* argv[])
             }
         }
 
-        if (cmd_arg_idx >= static_cast<size_t> (argc))
+        if (!have_command || cmd_arg_idx >= static_cast<size_t> (argc))
         {
             error_msg("Error: Missing command (executable_path)");
             throw SyntaxException();
