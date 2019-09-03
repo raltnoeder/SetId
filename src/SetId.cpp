@@ -6,7 +6,9 @@ extern "C"
     #include <grp.h>
 }
 
-#include <cstdio>
+#include <iostream>
+#include <cstddef>
+#include <cstdint>
 #include <stdexcept>
 #include <new>
 #include <memory>
@@ -19,6 +21,16 @@ extern "C"
 
 extern char** environ;
 
+static const std::string FMT_ALERT("\x1B[0;38;5;196m");
+static const std::string FMT_RESET("\x1B[0m");
+
+
+template<typename T>
+static void error_msg(const T msg)
+{
+    std::cerr << FMT_ALERT << msg << FMT_RESET << "\n\n" << std::flush;
+}
+
 // @throws SyntaxException
 static int64_t to_numeric(const char* param, const std::string& text)
 {
@@ -29,17 +41,14 @@ static int64_t to_numeric(const char* param, const std::string& text)
     }
     catch (dsaext::NumberFormatException&)
     {
-        std::fprintf(
-            stderr,
-            "\x1b[0;38;5;196mError: Unparsable value \"%s\" specified for parameter \"%s\"\x1b[0m\n\n,",
-            text.c_str(), param
-        );
+        std::cerr << FMT_ALERT << "Error: Unparsable value \"" << text << "\" specified for parameter \"" <<
+            param << FMT_RESET << "\n\n" << std::flush;
         throw SyntaxException();
     }
     return value;
 }
 
-// @throws AppException
+// @throws std::bad_alloc, AppException
 static uid_t to_userid(const int64_t value)
 {
     const uid_t uid_value = static_cast<uid_t> (value);
@@ -50,17 +59,14 @@ static uid_t to_userid(const int64_t value)
         std::string msg("User id number ");
         msg += std::to_string(value);
         msg += " ouf of range for system data type uid_t";
-        std::fputs(
-            msg.c_str(),
-            stderr
-        );
+        error_msg(msg);
         throw AppException();
     }
 
     return uid_value;
 }
 
-// @throws AppException
+// @throws std::bad_alloc, AppException
 static gid_t to_groupid(const int64_t value)
 {
     const gid_t gid_value = static_cast<uid_t> (value);
@@ -71,10 +77,7 @@ static gid_t to_groupid(const int64_t value)
         std::string msg("Group id number ");
         msg += std::to_string(value);
         msg += " ouf of range for system data type gid_t";
-        std::fputs(
-            msg.c_str(),
-            stderr
-        );
+        error_msg(msg);
         throw AppException();
     }
 
@@ -84,11 +87,8 @@ static gid_t to_groupid(const int64_t value)
 // @throws SyntaxException
 static void throw_missing_value(const char* param)
 {
-    std::fprintf(
-        stderr,
-        "\x1b[0;38;5;196mError: Missing value for parameter \"%s\"\x1b[0m\n\n",
-        param
-    );
+    std::cerr << FMT_ALERT << "Error: Missing value for parameter \"" << param << "\"" << FMT_RESET << "\n\n" <<
+        std::flush;
     throw SyntaxException();
 }
 
@@ -138,10 +138,7 @@ int main(int argc, char* argv[])
             {
                 if (have_userid)
                 {
-                    std::fputs(
-                        "\x1b[0;38;5;196mError: Multiple \"userid\" parameters\x1b[0m\n\n",
-                        stderr
-                    );
+                    error_msg("Error: Multiple \"userid\" parameters");
                     throw SyntaxException();
                 }
 
@@ -157,10 +154,7 @@ int main(int argc, char* argv[])
             {
                 if (have_groupid)
                 {
-                    std::fputs(
-                        "\x1b[0;38;5;196mError: Multiple \"groupid\" parameters\x1b[0m\n\n",
-                        stderr
-                    );
+                    error_msg("Error: Multiple \"groupid\" parameters");
                     throw SyntaxException();
                 }
                 req_groupid = to_groupid(to_numeric("groupid", value));
@@ -171,10 +165,7 @@ int main(int argc, char* argv[])
             {
                 if (have_groups)
                 {
-                    std::fputs(
-                        "\x1b[0;38;5;196mError: Multiple \"groups\" parameters\x1b[0m\n\n",
-                        stderr
-                    );
+                    error_msg("Error: Multiple \"groups\" parameters");
                     throw SyntaxException();
                 }
 
@@ -208,10 +199,9 @@ int main(int argc, char* argv[])
                     }
                     else
                     {
-                        std::fputs(
-                            "\x1b[0;38;5;196mError: The number of supplemental groups that were specified exceeds\n"
-                            "       the maximum number of groups supported by the setgroups() system call\x1b[0m\n\n",
-                            stderr
+                        error_msg(
+                            "Error: The number of supplemental groups that were specified exceeds\n"
+                            "       the maximum number of groups supported by the setgroups() system call"
                         );
                         throw AppException();
                     }
@@ -226,10 +216,7 @@ int main(int argc, char* argv[])
             {
                 if (have_value)
                 {
-                    std::fputs(
-                        "\x1b[0;38;5;196mError: Unexpected value for parameter \"command\"\x1b[0m\n\n",
-                        stderr
-                    );
+                    error_msg("Error: Unexpected value for parameter \"command\"");
                     throw SyntaxException();
                 }
                 cmd_arg_idx = arg_idx + 1;
@@ -237,21 +224,15 @@ int main(int argc, char* argv[])
             }
             else
             {
-                std::fprintf(
-                    stderr,
-                    "\x1b[0;38;5;196mError: Invalid parameter \"%s\"\x1b[0mn\n",
-                    key.c_str()
-                );
+                std::cerr << FMT_ALERT << "Error: Invalid parameter \"" << key << "\"" << FMT_RESET <<
+                    "\n\n" << std::flush;
                 throw SyntaxException();
             }
         }
 
         if (cmd_arg_idx >= static_cast<size_t> (argc))
         {
-            std::fputs(
-                "\x1b[0;38;5;196mError: Missing command (executable_path)\x1b[0m\n\n",
-                stderr
-            );
+            error_msg("Error: Missing command (executable_path)");
             throw SyntaxException();
         }
 
@@ -259,10 +240,7 @@ int main(int argc, char* argv[])
         {
             if (setregid(req_groupid, req_groupid) != 0)
             {
-                std::fputs(
-                    "\x1b[0;38;5;196mError: Adjusting the group id failed\x1b[0m\n\n",
-                    stderr
-                );
+                error_msg("Error: Adjusting the group id failed");
                 throw AppException();
             }
         }
@@ -271,20 +249,14 @@ int main(int argc, char* argv[])
         {
             if (setgroups(static_cast<int> (sup_groups_size), sup_groups.get()) != 0)
             {
-                std::fputs(
-                    "\x1b[0;38;5;196mError: Adjusting the list of supplemental groups failed\x1b[0m\n\n",
-                    stderr
-                );
+                error_msg("Error: Adjusting the list of supplemental groups failed");
                 throw AppException();
             }
         }
         else
         if (setgroups(0, nullptr) != 0)
         {
-            std::fputs(
-                "\x1b[0;38;5;196mError: Clearing the list of supplemental groups failed\x1b[0m\n\n",
-                stderr
-            );
+            error_msg("Error: Clearing the list of supplemental groups failed");
             throw AppException();
         }
 
@@ -292,30 +264,21 @@ int main(int argc, char* argv[])
         {
             if (setreuid(req_userid, req_userid) != 0)
             {
-                std::fputs(
-                    "\x1b[0;38;5;196mError: Adjusting the user id failed\x1b[0m\n\n",
-                    stderr
-                );
+                error_msg("Error: Adjusting the user id failed");
                 throw AppException();
             }
         }
 
         execve(argv[cmd_arg_idx], &argv[cmd_arg_idx], environ);
 
-        fprintf(
-            stderr,
-            "\x1b[0;38;5;196mError: Executing the command failed, executable_path = %s\x1b[0m\n\n",
-            argv[cmd_arg_idx]
-        );
+        std::cerr << FMT_ALERT << "Error: Executing the command failed, executable_path = " <<
+            argv[cmd_arg_idx] << FMT_RESET << "\n\n" << std::flush;
     }
     catch (SyntaxException&)
     {
-        std::fprintf(
-            stderr,
-            "Syntax: %s [ userid=<uid_nr> ] [ groupid=<gid_nr> ] [ groups=<gid_nr>,<gid_nr>,... ] "
-            "command <executable_path> <arguments...>\n",
-            exec_name
-        );
+        std::cerr << "Syntax: " << exec_name <<
+            " [ userid=<uid_nr> ] [ groupid=<gid_nr> ] [ groups=<gid_nr>,<gid_nr>,... ] "
+            "command <executable_path> <arguments...>\n\n" << std::flush;
     }
     catch (AppException&)
     {
@@ -323,13 +286,11 @@ int main(int argc, char* argv[])
     }
     catch (std::bad_alloc&)
     {
-        std::fputs(
-            "\x1b[0;38;5;196mError: Out of memory\x1b[0m\n\n",
-            stderr
-        );
+        error_msg("Error: Out of memory");
     }
-    std::fflush(stdout);
-    std::fflush(stderr);
+
+    std::cerr << std::flush;
+    std::cout << std::flush;
 
     return rc;
 }
