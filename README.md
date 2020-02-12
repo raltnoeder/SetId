@@ -37,7 +37,7 @@ Linux
 Hewlett-Packard HP/UX  
 Hewlett-Packard Tru64 UNIX  
 SGI *(now Hewlett-Packard Enterprise)* IRIX  
-Apple Mac OS X  *(see Mac OS X)*
+Apple Mac OS X  *(see Mac OS X)*  
 z/OS *(provided setgroups() -> BPX1SGR/BPX4SGR is available)*  
 
 ## Compiling
